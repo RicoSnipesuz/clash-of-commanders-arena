@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -12,16 +11,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Target, 
   DollarSign, 
-  Gamepad2, 
-  Monitor, 
-  Shield, 
   Users,
-  Clock,
   Settings,
   Trophy
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useMatches } from "@/hooks/useMatches";
 
-const MatchCreator = () => {
+interface MatchCreatorProps {
+  onMatchCreated?: () => void;
+}
+
+const MatchCreator = ({ onMatchCreated }: MatchCreatorProps) => {
   const [matchType, setMatchType] = useState("casual");
   const [wagerAmount, setWagerAmount] = useState([25]);
   const [gameMode, setGameMode] = useState("");
@@ -30,20 +31,48 @@ const MatchCreator = () => {
   const [scoreLimit, setScoreLimit] = useState(50);
   const [timeLimit, setTimeLimit] = useState(10);
   const [ranked, setRanked] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const handleCreateMatch = () => {
+  const { user } = useAuth();
+  const { createMatch } = useMatches();
+
+  const handleCreateMatch = async () => {
+    if (!user || !gameMode || !inputMethod || !weaponRestriction) {
+      return;
+    }
+
+    setIsCreating(true);
+
     const matchData = {
+      createdBy: user.id,
+      createdByUsername: user.username,
       type: matchType,
-      wager: matchType === "wager" ? wagerAmount[0] : 0,
+      wagerAmount: matchType === "wager" ? wagerAmount[0] : 0,
       gameMode,
       inputMethod,
       weaponRestriction,
       scoreLimit,
       timeLimit,
-      ranked
+      ranked: ranked || matchType === "ranked"
     };
+
     console.log("Creating match:", matchData);
-    // Here you would typically send this to your backend
+    createMatch(matchData);
+    
+    // Reset form
+    setGameMode("");
+    setInputMethod("");
+    setWeaponRestriction("");
+    setScoreLimit(50);
+    setTimeLimit(10);
+    setWagerAmount([25]);
+    setRanked(false);
+    
+    setIsCreating(false);
+    
+    if (onMatchCreated) {
+      onMatchCreated();
+    }
   };
 
   return (
@@ -260,10 +289,10 @@ const MatchCreator = () => {
                   <Button 
                     onClick={handleCreateMatch}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-lg py-6"
-                    disabled={!gameMode || !inputMethod || !weaponRestriction}
+                    disabled={!gameMode || !inputMethod || !weaponRestriction || isCreating}
                   >
                     <Target className="mr-2 h-5 w-5" />
-                    Create Match
+                    {isCreating ? "Creating..." : "Create Match"}
                   </Button>
                   
                   <p className="text-gray-400 text-xs text-center">

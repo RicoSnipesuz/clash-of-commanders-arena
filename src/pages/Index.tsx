@@ -12,12 +12,17 @@ import { useAuth } from "@/hooks/useAuth";
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, getAllUsers } = useAuth();
 
   const openAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setIsAuthModalOpen(true);
   };
+
+  // Get recent signups for display on homepage
+  const recentUsers = getAllUsers()
+    .sort((a, b) => new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime())
+    .slice(0, 5);
 
   if (isLoading) {
     return (
@@ -91,6 +96,42 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Recent Players Section */}
+      {recentUsers.length > 0 && (
+        <section className="container mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-white mb-4">Recent Players</h2>
+            <p className="text-gray-300 text-lg">Join the competition</p>
+          </div>
+          
+          <Card className="max-w-2xl mx-auto bg-slate-800/50 border-purple-800/30">
+            <CardHeader>
+              <CardTitle className="text-white text-center flex items-center justify-center">
+                <Users className="mr-2 h-6 w-6 text-purple-400" />
+                Latest Signups
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentUsers.map((user, index) => (
+                  <div key={user.id} className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <Badge className="bg-purple-600/20 text-purple-300">
+                        #{index + 1}
+                      </Badge>
+                      <span className="text-white font-medium">@{user.username}</span>
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {new Date(user.joinedAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
       {/* Features Grid */}
       <section className="container mx-auto px-4 py-20">

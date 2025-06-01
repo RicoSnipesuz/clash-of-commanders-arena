@@ -26,12 +26,26 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
   
   const { login, signup } = useAuth();
 
+  const validateUsername = (username: string): boolean => {
+    // Check for invalid characters, fonts, and special symbols
+    const invalidPattern = /[^\w\-_.]/;
+    const fontPattern = /[\u{1F100}-\u{1F1FF}\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+    
+    return !invalidPattern.test(username) && !fontPattern.test(username) && username.length >= 3 && username.length <= 20;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     if (mode === 'signup') {
+      if (!validateUsername(username)) {
+        setError("Username must be 3-20 characters and contain only letters, numbers, hyphens, underscores, and periods");
+        setIsLoading(false);
+        return;
+      }
+
       if (password !== confirmPassword) {
         setError("Passwords don't match");
         setIsLoading(false);
@@ -53,6 +67,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
         setPassword("");
         setUsername("");
         setConfirmPassword("");
+        // Refresh page
+        window.location.reload();
       } else {
         setError(result.error || "Signup failed");
       }
@@ -64,6 +80,8 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
         // Reset form
         setEmail("");
         setPassword("");
+        // Refresh page
+        window.location.reload();
       } else {
         setError(result.error || "Login failed");
       }
