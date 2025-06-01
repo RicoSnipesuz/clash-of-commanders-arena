@@ -298,7 +298,7 @@ const Index = () => {
             </Button>
           </CardContent>
         </Card>
-      </Section>
+      </section>
 
       <AuthModal 
         isOpen={isAuthModalOpen}
