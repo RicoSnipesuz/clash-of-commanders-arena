@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,19 +7,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Users, Target, Shield, Gamepad2, Monitor, Zap, DollarSign } from "lucide-react";
 import AuthModal from "@/components/AuthModal";
 import Dashboard from "@/components/Dashboard";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const { user, isLoading } = useAuth();
 
   const openAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setIsAuthModalOpen(true);
   };
 
-  if (isLoggedIn) {
-    return <Dashboard onLogout={() => setIsLoggedIn(false)} />;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Dashboard />;
   }
 
   return (
@@ -61,7 +70,7 @@ const Index = () => {
             <br />Dominate.
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            The ultimate 1v1 matchmaking platform for Call of Duty. No restrictions, full customization, real money on the line.
+            The ultimate 1v1 matchmaking platform for Call of Duty. Free For All and Hardpoint matches with real money on the line.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -87,18 +96,30 @@ const Index = () => {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-white mb-4">Why CompeteCore?</h2>
-          <p className="text-gray-300 text-lg">Unlike other platforms, we give you complete freedom</p>
+          <p className="text-gray-300 text-lg">The ultimate platform for competitive Call of Duty matches</p>
         </div>
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-slate-800/50 border-purple-800/30 hover:border-purple-600/50 transition-all duration-300">
             <CardHeader className="text-center">
               <Gamepad2 className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Full Customization</CardTitle>
+              <CardTitle className="text-white">Free For All</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-gray-300 text-center">
-                Choose any game mode, weapon restrictions, input method. Your match, your rules.
+                Pure 1v1 skill-based combat. No teams, just you versus your opponent.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-purple-800/30 hover:border-purple-600/50 transition-all duration-300">
+            <CardHeader className="text-center">
+              <Target className="h-12 w-12 text-orange-400 mx-auto mb-4" />
+              <CardTitle className="text-white">Hardpoint</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-300 text-center">
+                Control rotating objectives in intense 1v1 Hardpoint matches.
               </p>
             </CardContent>
           </Card>
@@ -126,83 +147,63 @@ const Index = () => {
               </p>
             </CardContent>
           </Card>
-
-          <Card className="bg-slate-800/50 border-purple-800/30 hover:border-purple-600/50 transition-all duration-300">
-            <CardHeader className="text-center">
-              <Shield className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-              <CardTitle className="text-white">Anti-Cheat</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 text-center">
-                Advanced dispute system with community verification and admin oversight.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
       {/* Game Modes */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Supported Game Modes</h2>
-          <p className="text-gray-300 text-lg">More freedom than any other platform</p>
+          <h2 className="text-4xl font-bold text-white mb-4">Game Modes</h2>
+          <p className="text-gray-300 text-lg">Two intense competitive formats</p>
         </div>
 
-        <Tabs defaultValue="modes" className="max-w-4xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-800/30">
-            <TabsTrigger value="modes" className="data-[state=active]:bg-purple-600">Game Modes</TabsTrigger>
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <Card className="bg-slate-800/50 border-purple-800/30">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center text-2xl">
+                <Users className="mr-3 h-8 w-8 text-purple-400" />
+                Free For All
+              </CardTitle>
+              <CardDescription className="text-gray-300 text-lg">
+                Classic 1v1 deathmatch - first to the kill limit wins
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Customizable kill limits (10-100)</li>
+                <li>• All weapon types allowed</li>
+                <li>• Controller or KBM options</li>
+                <li>• Perfect for quick matches</li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/50 border-purple-800/30">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center text-2xl">
+                <Target className="mr-3 h-8 w-8 text-orange-400" />
+                Hardpoint
+              </CardTitle>
+              <CardDescription className="text-gray-300 text-lg">
+                Control rotating objectives to earn points
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-gray-300 space-y-2">
+                <li>• Control hills to gain points</li>
+                <li>• Strategic positioning matters</li>
+                <li>• Multiple objectives per match</li>
+                <li>• Test your map knowledge</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="input" className="max-w-4xl mx-auto mt-12">
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-purple-800/30">
             <TabsTrigger value="input" className="data-[state=active]:bg-purple-600">Input Methods</TabsTrigger>
             <TabsTrigger value="weapons" className="data-[state=active]:bg-purple-600">Weapon Rules</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="modes" className="mt-8">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="bg-slate-800/50 border-purple-800/30">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Target className="mr-2 h-5 w-5 text-purple-400" />
-                    Gunfight
-                  </CardTitle>
-                  <CardDescription className="text-gray-300">
-                    2v2 elimination rounds with preset loadouts
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="bg-slate-800/50 border-purple-800/30">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Users className="mr-2 h-5 w-5 text-purple-400" />
-                    Team Deathmatch
-                  </CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Classic TDM with customizable score limits
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="bg-slate-800/50 border-purple-800/30">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Monitor className="mr-2 h-5 w-5 text-purple-400" />
-                    Hardpoint
-                  </CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Control zones with rotating objectives
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="bg-slate-800/50 border-purple-800/30">
-                <CardHeader>
-                  <CardTitle className="text-white flex items-center">
-                    <Shield className="mr-2 h-5 w-5 text-purple-400" />
-                    Search & Destroy
-                  </CardTitle>
-                  <CardDescription className="text-gray-300">
-                    Round-based elimination with bomb objectives
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </TabsContent>
           
           <TabsContent value="input" className="mt-8">
             <div className="grid md:grid-cols-3 gap-6">
@@ -283,7 +284,7 @@ const Index = () => {
               Ready to Compete?
             </CardTitle>
             <CardDescription className="text-xl text-gray-300">
-              Join thousands of players already earning money through competitive gaming
+              Join players earning money through competitive Free For All and Hardpoint matches
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -297,14 +298,13 @@ const Index = () => {
             </Button>
           </CardContent>
         </Card>
-      </section>
+      </Section>
 
       <AuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         mode={authMode}
         onSuccess={() => {
-          setIsLoggedIn(true);
           setIsAuthModalOpen(false);
         }}
       />

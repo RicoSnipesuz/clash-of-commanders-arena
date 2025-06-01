@@ -1,229 +1,184 @@
 
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trophy, DollarSign, TrendingUp, Medal, Crown, Award } from "lucide-react";
+import { Trophy, Medal, Award, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Leaderboard = () => {
-  const [timeFilter, setTimeFilter] = useState("monthly");
+  const { getAllUsers } = useAuth();
+  const allUsers = getAllUsers();
 
-  // Mock leaderboard data
-  const globalLeaderboard = [
-    { rank: 1, username: "SniperGod", elo: 2450, wins: 156, losses: 23, winRate: 87, avatar: "" },
-    { rank: 2, username: "QuickScoper", elo: 2389, wins: 143, losses: 31, winRate: 82, avatar: "" },
-    { rank: 3, username: "ProPlayer99", elo: 2301, wins: 134, losses: 28, winRate: 83, avatar: "" },
-    { rank: 4, username: "RushMaster", elo: 2245, wins: 121, losses: 35, winRate: 78, avatar: "" },
-    { rank: 5, username: "TacticalPro", elo: 2198, wins: 115, losses: 29, winRate: 80, avatar: "" },
-    { rank: 6, username: "HeadshotKing", elo: 2156, wins: 108, losses: 32, winRate: 77, avatar: "" },
-    { rank: 7, username: "EliteGamer", elo: 2134, wins: 102, losses: 28, winRate: 78, avatar: "" },
-    { rank: 8, username: "ProGamer2024", elo: 1847, wins: 47, losses: 23, winRate: 67, avatar: "" },
-  ];
+  // Sort users by wins (you could change this to ELO rating later)
+  const topPlayers = allUsers
+    .sort((a, b) => {
+      const aWinRate = a.stats.wins / Math.max(a.stats.wins + a.stats.losses, 1);
+      const bWinRate = b.stats.wins / Math.max(b.stats.wins + b.stats.losses, 1);
+      
+      // First sort by total wins, then by win rate
+      if (a.stats.wins !== b.stats.wins) {
+        return b.stats.wins - a.stats.wins;
+      }
+      return bWinRate - aWinRate;
+    })
+    .slice(0, 10);
 
-  const wagerLeaderboard = [
-    { rank: 1, username: "MoneyMaker", earnings: 2450.50, matches: 89, avgWager: 27.5, avatar: "" },
-    { rank: 2, username: "CashKing", earnings: 1889.25, matches: 67, avgWager: 28.2, avatar: "" },
-    { rank: 3, username: "BigBettor", earnings: 1654.75, matches: 45, avgWager: 36.8, avatar: "" },
-    { rank: 4, username: "WagerWinner", earnings: 1423.00, matches: 78, avgWager: 18.2, avatar: "" },
-    { rank: 5, username: "ProfitPlayer", earnings: 1321.50, matches: 56, avgWager: 23.6, avatar: "" },
-  ];
+  const topEarners = allUsers
+    .sort((a, b) => b.stats.earnings - a.stats.earnings)
+    .slice(0, 10);
 
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
+  const getRankIcon = (index: number) => {
+    switch (index) {
+      case 0:
+        return <Trophy className="h-5 w-5 text-yellow-400" />;
       case 1:
-        return <Crown className="h-5 w-5 text-yellow-400" />;
-      case 2:
         return <Medal className="h-5 w-5 text-gray-400" />;
-      case 3:
+      case 2:
         return <Award className="h-5 w-5 text-amber-600" />;
       default:
-        return <span className="text-gray-400 font-bold">#{rank}</span>;
+        return <span className="text-gray-400 font-bold">#{index + 1}</span>;
     }
   };
 
-  const getRankColor = (rank: number) => {
-    switch (rank) {
+  const getRankBadge = (index: number) => {
+    switch (index) {
+      case 0:
+        return "bg-yellow-600/20 text-yellow-300 border-yellow-400";
       case 1:
-        return "border-yellow-400/50 bg-yellow-400/10";
+        return "bg-gray-600/20 text-gray-300 border-gray-400";
       case 2:
-        return "border-gray-400/50 bg-gray-400/10";
-      case 3:
-        return "border-amber-600/50 bg-amber-600/10";
+        return "bg-amber-600/20 text-amber-300 border-amber-400";
       default:
-        return "border-purple-800/30 bg-slate-800/50";
+        return "bg-purple-600/20 text-purple-300 border-purple-400";
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <Card className="bg-slate-800/50 border-purple-800/30">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-white flex items-center">
-                <Trophy className="mr-2 h-6 w-6 text-yellow-400" />
-                Leaderboards
-              </CardTitle>
-              <CardDescription className="text-gray-300">
-                See where you rank among the best players
-              </CardDescription>
-            </div>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-32 bg-slate-700 border-slate-600 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-700 border-slate-600">
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="alltime">All Time</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-      </Card>
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-white mb-4 flex items-center justify-center">
+          <Trophy className="mr-3 h-10 w-10 text-yellow-400" />
+          Leaderboards
+        </h1>
+        <p className="text-gray-300 text-lg">
+          Top players competing in Free For All and Hardpoint matches
+        </p>
+      </div>
 
-      <Tabs defaultValue="global" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 border border-purple-800/30">
-          <TabsTrigger value="global" className="data-[state=active]:bg-purple-600">
-            <Trophy className="mr-2 h-4 w-4" />
-            Global Ranking
-          </TabsTrigger>
-          <TabsTrigger value="wager" className="data-[state=active]:bg-purple-600">
-            <DollarSign className="mr-2 h-4 w-4" />
-            Wager Earnings
-          </TabsTrigger>
-          <TabsTrigger value="monthly" className="data-[state=active]:bg-purple-600">
-            <TrendingUp className="mr-2 h-4 w-4" />
-            Monthly
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="global" className="mt-8">
-          <Card className="bg-slate-800/50 border-purple-800/30">
-            <CardHeader>
-              <CardTitle className="text-white">Global ELO Rankings</CardTitle>
-              <CardDescription className="text-gray-300">
-                Based on competitive match performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {globalLeaderboard.map((player) => (
-                  <Card key={player.rank} className={getRankColor(player.rank)}>
-                    <CardContent className="py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center justify-center w-8 h-8">
-                            {getRankIcon(player.rank)}
-                          </div>
-                          <Avatar>
-                            <AvatarImage src={player.avatar} />
-                            <AvatarFallback className="bg-purple-600 text-white">
-                              {player.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-white font-semibold">{player.username}</p>
-                            <p className="text-gray-400 text-sm">
-                              {player.wins}W / {player.losses}L
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-6">
-                          <div className="text-center">
-                            <p className="text-white font-bold text-lg">{player.elo}</p>
-                            <p className="text-gray-400 text-xs">ELO</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-white font-bold">{player.winRate}%</p>
-                            <p className="text-gray-400 text-xs">Win Rate</p>
-                          </div>
-                          <Badge className="bg-purple-600/20 text-purple-300">
-                            {player.rank <= 10 ? "Top 10" : "Rising"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="wager" className="mt-8">
-          <Card className="bg-slate-800/50 border-purple-800/30">
-            <CardHeader>
-              <CardTitle className="text-white">Top Earners</CardTitle>
-              <CardDescription className="text-gray-300">
-                Players with the highest wager winnings
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {wagerLeaderboard.map((player) => (
-                  <Card key={player.rank} className={getRankColor(player.rank)}>
-                    <CardContent className="py-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center justify-center w-8 h-8">
-                            {getRankIcon(player.rank)}
-                          </div>
-                          <Avatar>
-                            <AvatarImage src={player.avatar} />
-                            <AvatarFallback className="bg-green-600 text-white">
-                              {player.username.substring(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="text-white font-semibold">{player.username}</p>
-                            <p className="text-gray-400 text-sm">
-                              {player.matches} matches played
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-6">
-                          <div className="text-center">
-                            <p className="text-green-400 font-bold text-lg">${player.earnings}</p>
-                            <p className="text-gray-400 text-xs">Total Earnings</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-white font-bold">${player.avgWager}</p>
-                            <p className="text-gray-400 text-xs">Avg Wager</p>
-                          </div>
-                          <Badge className="bg-green-600/20 text-green-300">
-                            High Roller
-                          </Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="monthly" className="mt-8">
-          <Card className="bg-slate-800/50 border-purple-800/30">
-            <CardHeader>
-              <CardTitle className="text-white">Monthly Champions</CardTitle>
-              <CardDescription className="text-gray-300">
-                This month's top performers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Top Players by Wins */}
+        <Card className="bg-slate-800/50 border-purple-800/30">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Trophy className="mr-2 h-6 w-6 text-purple-400" />
+              Top Players
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              Ranked by wins and win rate
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {topPlayers.length === 0 ? (
               <div className="text-center py-8">
-                <Trophy className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-                <p className="text-gray-400">Monthly leaderboard resets in 12 days</p>
+                <User className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                <p className="text-gray-400">No players yet</p>
+                <p className="text-gray-500 text-sm">Be the first to compete!</p>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ) : (
+              <div className="space-y-4">
+                {topPlayers.map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-slate-700/50 hover:bg-slate-700/70 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center justify-center w-8">
+                        {getRankIcon(index)}
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold">{player.username}</h3>
+                        <p className="text-gray-400 text-sm">
+                          {player.stats.wins}W - {player.stats.losses}L
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge className={getRankBadge(index)}>
+                        {player.stats.wins + player.stats.losses > 0
+                          ? `${Math.round((player.stats.wins / (player.stats.wins + player.stats.losses)) * 100)}%`
+                          : "0%"
+                        } WR
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Earners */}
+        <Card className="bg-slate-800/50 border-green-800/30">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Trophy className="mr-2 h-6 w-6 text-green-400" />
+              Top Earners
+            </CardTitle>
+            <CardDescription className="text-gray-300">
+              Players with highest earnings from wager matches
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {topEarners.length === 0 || topEarners.every(p => p.stats.earnings === 0) ? (
+              <div className="text-center py-8">
+                <User className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+                <p className="text-gray-400">No earnings yet</p>
+                <p className="text-gray-500 text-sm">Start competing in wager matches!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topEarners.filter(p => p.stats.earnings > 0).map((player, index) => (
+                  <div
+                    key={player.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-slate-700/50 hover:bg-slate-700/70 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center justify-center w-8">
+                        {getRankIcon(index)}
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold">{player.username}</h3>
+                        <p className="text-gray-400 text-sm">
+                          {player.stats.wins}W - {player.stats.losses}L
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-400 font-bold text-lg">
+                        ${player.stats.earnings}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Season Info */}
+      <Card className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-purple-600/50">
+        <CardHeader className="text-center">
+          <CardTitle className="text-white text-2xl">Season 1</CardTitle>
+          <CardDescription className="text-gray-300">
+            Compete in Free For All and Hardpoint matches to climb the rankings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-gray-300">
+            Rankings are based on total wins and win rate. Start competing to see your name here!
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 };

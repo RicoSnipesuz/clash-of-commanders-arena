@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Gamepad2, Mail, Lock, User, Shield } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,16 +21,68 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { login, signup } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate authentication
-    console.log("Auth attempt:", { email, password, username });
-    onSuccess();
+    setError("");
+    setIsLoading(true);
+
+    if (mode === 'signup') {
+      if (password !== confirmPassword) {
+        setError("Passwords don't match");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (password.length < 6) {
+        setError("Password must be at least 6 characters");
+        setIsLoading(false);
+        return;
+      }
+      
+      const result = await signup(email, password, username);
+      if (result.success) {
+        onSuccess();
+        onClose();
+        // Reset form
+        setEmail("");
+        setPassword("");
+        setUsername("");
+        setConfirmPassword("");
+      } else {
+        setError(result.error || "Signup failed");
+      }
+    } else {
+      const result = await login(email, password);
+      if (result.success) {
+        onSuccess();
+        onClose();
+        // Reset form
+        setEmail("");
+        setPassword("");
+      } else {
+        setError(result.error || "Login failed");
+      }
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleClose = () => {
+    setError("");
+    setEmail("");
+    setPassword("");
+    setUsername("");
+    setConfirmPassword("");
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md bg-slate-900 border-purple-800/30">
         <DialogHeader>
           <DialogTitle className="text-white text-center flex items-center justify-center">
@@ -43,6 +96,12 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
             <TabsTrigger value="login" className="data-[state=active]:bg-purple-600">Login</TabsTrigger>
             <TabsTrigger value="signup" className="data-[state=active]:bg-purple-600">Sign Up</TabsTrigger>
           </TabsList>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-md">
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          )}
 
           <TabsContent value="login">
             <Card className="bg-slate-800/50 border-purple-800/30">
@@ -81,9 +140,10 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
                   </div>
                   <Button 
                     type="submit" 
+                    disabled={isLoading}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   >
-                    Login
+                    {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </form>
               </CardContent>
@@ -155,9 +215,10 @@ const AuthModal = ({ isOpen, onClose, mode, onSuccess }: AuthModalProps) => {
                   </div>
                   <Button 
                     type="submit" 
+                    disabled={isLoading}
                     className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                   >
-                    Create Account
+                    {isLoading ? "Creating Account..." : "Create Account"}
                   </Button>
                 </form>
               </CardContent>

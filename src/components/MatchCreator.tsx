@@ -17,7 +17,8 @@ import {
   Shield, 
   Users,
   Clock,
-  Settings
+  Settings,
+  Trophy
 } from "lucide-react";
 
 const MatchCreator = () => {
@@ -93,11 +94,8 @@ const MatchCreator = () => {
                       <SelectValue placeholder="Select game mode" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-700 border-slate-600">
-                      <SelectItem value="gunfight">Gunfight</SelectItem>
-                      <SelectItem value="tdm">Team Deathmatch</SelectItem>
+                      <SelectItem value="ffa">Free For All</SelectItem>
                       <SelectItem value="hardpoint">Hardpoint</SelectItem>
-                      <SelectItem value="snd">Search & Destroy</SelectItem>
-                      <SelectItem value="control">Control</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
