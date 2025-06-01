@@ -18,16 +18,22 @@ interface Match {
   opponentUsername?: string;
 }
 
+// Simulate a shared storage by using a global key that all users can access
+const SHARED_MATCHES_KEY = 'competecore_all_matches';
+
 export const useMatches = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadMatches();
+    // Set up an interval to refresh matches every 5 seconds to see other users' matches
+    const interval = setInterval(loadMatches, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadMatches = () => {
-    const savedMatches = localStorage.getItem('competecore_matches');
+    const savedMatches = localStorage.getItem(SHARED_MATCHES_KEY);
     if (savedMatches) {
       setMatches(JSON.parse(savedMatches));
     }
@@ -42,22 +48,24 @@ export const useMatches = () => {
       status: 'open'
     };
 
-    const updatedMatches = [newMatch, ...matches];
+    const currentMatches = JSON.parse(localStorage.getItem(SHARED_MATCHES_KEY) || '[]');
+    const updatedMatches = [newMatch, ...currentMatches];
     setMatches(updatedMatches);
-    localStorage.setItem('competecore_matches', JSON.stringify(updatedMatches));
+    localStorage.setItem(SHARED_MATCHES_KEY, JSON.stringify(updatedMatches));
     
     return newMatch;
   };
 
   const joinMatch = (matchId: string, userId: string, username: string) => {
-    const updatedMatches = matches.map(match => 
+    const currentMatches = JSON.parse(localStorage.getItem(SHARED_MATCHES_KEY) || '[]');
+    const updatedMatches = currentMatches.map((match: Match) => 
       match.id === matchId 
         ? { ...match, opponent: userId, opponentUsername: username, status: 'in-progress' as const }
         : match
     );
     
     setMatches(updatedMatches);
-    localStorage.setItem('competecore_matches', JSON.stringify(updatedMatches));
+    localStorage.setItem(SHARED_MATCHES_KEY, JSON.stringify(updatedMatches));
   };
 
   const getOpenMatches = () => {
